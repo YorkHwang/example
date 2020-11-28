@@ -30,10 +30,10 @@ public class Main {
 
     }
 
-    public void executeFuture()  {
+    public void executeFuture() throws ExecutionException, InterruptedException {
 
         try {
-            final Long userId = 10L;
+            final Long userId = 100000L;
             final long st = System.currentTimeMillis();
             final Callable<String> userLevelCall = () -> getUserLevel(userId);
             final Callable<String> userTagCall = () -> getUserTag(userId);
@@ -41,21 +41,17 @@ public class Main {
             final FutureTask<String> userLevelTask = new FutureTask<>(userLevelCall);
             final FutureTask<String> userTagTask = new FutureTask<>(userTagCall);
 
-            EXECUTOR.submit(userLevelTask);
-            EXECUTOR.submit(userTagTask);
+            EXECUTOR.execute(userLevelTask);
+            EXECUTOR.execute(userTagTask);
 
             log.info("1-cost seconds:" + (System.currentTimeMillis() - st));
-            log.info("userTag==" + userTagTask.get());
-            log.info("2-cost seconds:" + (System.currentTimeMillis() - st));
             log.info("userLevel==" + userLevelTask.get());
+            log.info("2-cost seconds:" + (System.currentTimeMillis() - st));
+            log.info("userTag==" + userTagTask.get());
             log.info("3-cost seconds:" + (System.currentTimeMillis() - st));
 
-        } catch (final RuntimeException e){
+        } catch (final Exception e){
            log.error("", e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
         } finally {
             EXECUTOR.shutdown();
         }
@@ -94,7 +90,7 @@ public class Main {
 
     public String getUserLevel(Long userId){
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(2);
             log.info("=============getUserLevel");
             if(true){
                 throw new BusinessException("DEF_CODE", "主动异常");
@@ -108,7 +104,7 @@ public class Main {
 
     public String getUserTag(Long userId){
         try {
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(1);
             log.info("=============getUserTag");
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -145,6 +141,8 @@ public class Main {
                 t.setPriority(Thread.NORM_PRIORITY);
             }
 
+            //t.setUncaughtExceptionHandler(new MyUncaughtExceptionHandle());
+
             return t;
         }
 
@@ -156,36 +154,6 @@ public class Main {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
             System.out.println("caught " + e);
-        }
-    }
-
-    /**
-     * Executors.DefaultThreadFactory实现
-     */
-    static class DefaultThreadFactory implements ThreadFactory {
-        private static final AtomicInteger poolNumber = new AtomicInteger(1);
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-
-        DefaultThreadFactory() {
-            SecurityManager var1 = System.getSecurityManager();
-            this.group = var1 != null ? var1.getThreadGroup() : Thread.currentThread().getThreadGroup();
-            this.namePrefix = "pool-" + poolNumber.getAndIncrement() + "-thread-";
-        }
-
-        @Override
-        public Thread newThread(Runnable var1) {
-            Thread var2 = new Thread(this.group, var1, this.namePrefix + this.threadNumber.getAndIncrement(), 0L);
-            if (var2.isDaemon()) {
-                var2.setDaemon(false);
-            }
-
-            if (var2.getPriority() != 5) {
-                var2.setPriority(5);
-            }
-
-            return var2;
         }
     }
 }

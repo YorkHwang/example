@@ -24,7 +24,6 @@ public class List2Map {
         Map<String,Apple> appleMap = appleList.stream().collect(Collectors.toMap(Apple::getId, a -> a,(k1, k2)->k1));
 
 
-
         System.out.println(appleMap);
     }
 
